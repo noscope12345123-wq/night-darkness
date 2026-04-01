@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h1>{{ student.name }} ({{ student.student_id }})</h1>
+    <p>Email: {{ student.email }}</p>
+    <p>Course: {{ student.course }}</p>
+    <p>Attendance: {{ student.attendance }}%</p>
+    <p>Status: {{ tracker.get_progress_status(student) }}</p>
+    <p>Average: {{ tracker.calculate_student_average(student) }}</p>
+    <p>Recommendation: {{ tracker.get_recommendation(student) }}</p>
+    <p><a href="{{ url_for('index') }}">Back</a></p>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h2>Add Module</h2>
+        <form method="post" action="{{ url_for('add_module') }}">
+            <input type="hidden" name="student_id" value="{{ student.student_id }}">
+            <input name="module_name" placeholder="Module name" required>
+            <input name="lecturer" placeholder="Lecturer">
+            <button type="submit">Add Module</button>
+        </form>
+    </div>
+    <div class="card">
+        <h2>Add Assessment</h2>
+        <form method="post" action="{{ url_for('add_assessment') }}">
+            <input type="hidden" name="student_id" value="{{ student.student_id }}">
+            <input name="module_name" placeholder="Module name" required>
+            <input name="assessment_name" placeholder="Assessment name" required>
+            <input name="score" placeholder="Score" required>
+            <input name="weight" placeholder="Weight" required>
+            <textarea name="feedback" placeholder="Feedback"></textarea>
+            <button type="submit">Add Assessment</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Modules</h2>
+    {% for module in student.modules.values() %}
+        <h3>{{ module.module_name }} {% if module.lecturer %}- {{ module.lecturer }}{% endif %}</h3>
+        <ul>
+            {% for assessment in module.assessments %}
+                <li>{{ assessment.name }} - score {{ assessment.score }} - weight {{ assessment.weight }} - {{ assessment.feedback }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No modules added yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
