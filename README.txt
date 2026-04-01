@@ -1,0 +1,5 @@
+Student Progress Tracker Pro is a Python application created for IY499. It was designed to help manage student records, attendance, module results, and overall academic progress. The program includes three versions of the same system: a console version, a Tkinter desktop version, and a Flask web version. This demonstrates different ways of building user interfaces while keeping one shared core logic file.
+
+The project uses file handling to save and load JSON data, export CSV reports, and store log entries. It also includes error handling to manage invalid input safely, plus a search algorithm and bubble sort algorithm for higher marks. Data visualisation is provided in the Tkinter version through a Canvas bar chart that displays average student scores.
+
+To run the project, install the required libraries using pip install -r requirements.txt. Then run python console_app.py, python tkinter_app.py, or python flask_app.py. Testing can be checked with python tests.py. All references used for libraries, functions, and features are cited in code comments and the README.md file.
