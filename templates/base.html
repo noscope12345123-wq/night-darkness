@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ app_name }}</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #09101f; color: #edf2ff; margin: 0; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #09101f 0%, #0c1630 100%); color: #edf2ff; margin: 0; }
         .container { width: 92%; margin: 24px auto; }
         .card { background: #121b33; border-radius: 18px; padding: 20px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.22); }
-        h1,h2,h3 { color: #7aa3ff; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #2d3f6b; background: #0d1528; color: #fff; }
+        h1,h2,h3 { color: #7aa3ff; margin-top: 0; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #2d3f6b; background: #0d1528; color: #fff; box-sizing: border-box; }
         button, .btn { background: #3763ff; color: white; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; display: inline-block; }
         table { width: 100%; border-collapse: collapse; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid #263554; }
         th { color: #9eb8ff; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
         .metric { background: #0d1528; border-radius: 14px; padding: 16px; }
+        .metric strong { color: #9eb8ff; }
         .flash-success { background: #113b28; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
         .flash-danger { background: #501a1a; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #18264b; color: #cfe0ff; font-size: 12px; margin-right: 6px; }
         a { color: #9eb8ff; }
     </style>
 </head>

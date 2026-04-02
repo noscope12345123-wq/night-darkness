@@ -2,7 +2,12 @@
 {% block content %}
 <div class="card">
     <h1>{{ app_name }} - Flask Dashboard</h1>
-    <p>Web version of the project with file handling, search, sorting, analytics, and export.</p>
+    <p>Web version of the project with file handling, searching, bubble sorting, analytics, export, and a shared backend.</p>
+    <span class="pill">JSON storage</span>
+    <span class="pill">CSV export</span>
+    <span class="pill">Search algorithm</span>
+    <span class="pill">Bubble sort</span>
+    <span class="pill">Error handling</span>
 </div>
 
 <div class="card metrics">
@@ -10,6 +15,7 @@
     <div class="metric"><strong>Average Grade</strong><br>{{ stats.average_grade }}</div>
     <div class="metric"><strong>Average Attendance</strong><br>{{ stats.average_attendance }}</div>
     <div class="metric"><strong>At Risk</strong><br>{{ stats.at_risk_count }}</div>
+    <div class="metric"><strong>Pass Rate</strong><br>{{ stats.pass_rate }}%</div>
 </div>
 
 <div class="grid">
