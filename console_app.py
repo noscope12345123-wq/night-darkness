@@ -19,7 +19,7 @@ try:
 except ImportError:
     COLOUR_ENABLED = False
 
-    class _Dummy:
+    class _Dummy:                
         def __getattr__(self, _name: str) -> str:
             return ""
 
