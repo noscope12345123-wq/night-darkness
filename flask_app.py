@@ -6,10 +6,17 @@ Flask web version of Student Progress Tracker Pro.
 References used in this file:
 - Flask quickstart: https://flask.palletsprojects.com/en/stable/quickstart/
 - Flask tutorial: https://flask.palletsprojects.com/en/stable/tutorial/
-- Flask installation guide: https://flask.palletsprojects.com/en/stable/installation/
+- Flask API patterns for request/redirect/url_for/flash/render_template:
+  https://flask.palletsprojects.com/en/stable/api/
+
+Notes:
+- Flask functions and decorators are official framework features.
+- Route structure and project-specific page flow are original work.
 '''
 
-from flask import Flask, flash, redirect, render_template, request, url_for  # Reference: https://flask.palletsprojects.com/
+# Flask imports used for routing, forms, templates, and flash messages.
+# Reference: https://flask.palletsprojects.com/en/stable/
+from flask import Flask, flash, redirect, render_template, request, url_for
 
 from core import APP_NAME, StudentTracker, TrackerError, ValidationError
 
@@ -20,24 +27,32 @@ tracker = StudentTracker()
 
 @app.route("/")
 def index():
-    '''Home page showing dashboard and student table.'''
+    '''Render the dashboard page with metrics and the student table.'''
     sort_by = request.args.get("sort", "name")
     query = request.args.get("q", "").strip()
     students = tracker.search_students(query) if query else tracker.sort_students(sort_by)
     stats = tracker.dashboard_metrics()
-    return render_template("index.html", app_name=APP_NAME, tracker=tracker, students=students, stats=stats, sort_by=sort_by, query=query)
+    return render_template(
+        "index.html",
+        app_name=APP_NAME,
+        tracker=tracker,
+        students=students,
+        stats=stats,
+        sort_by=sort_by,
+        query=query,
+    )
 
 
 @app.route("/student/<student_id>")
 def student_detail(student_id: str):
-    '''Show one student profile page.'''
+    '''Render the detail page for one student.'''
     student = tracker.get_student(student_id)
     return render_template("student_detail.html", app_name=APP_NAME, tracker=tracker, student=student)
 
 
 @app.route("/add-student", methods=["POST"])
 def add_student():
-    '''Handle add student form submission.'''
+    '''Handle add-student form submission with validation and flashing.'''
     try:
         tracker.add_student(
             request.form.get("student_id", ""),
@@ -55,7 +70,7 @@ def add_student():
 
 @app.route("/add-module", methods=["POST"])
 def add_module():
-    '''Handle add module form submission.'''
+    '''Handle add-module form submission.'''
     student_id = request.form.get("student_id", "")
     try:
         tracker.add_module(student_id, request.form.get("module_name", ""), request.form.get("lecturer", ""))
@@ -67,7 +82,7 @@ def add_module():
 
 @app.route("/add-assessment", methods=["POST"])
 def add_assessment():
-    '''Handle add assessment form submission.'''
+    '''Handle add-assessment form submission.'''
     student_id = request.form.get("student_id", "")
     try:
         tracker.add_assessment(
@@ -86,7 +101,7 @@ def add_assessment():
 
 @app.route("/delete-student/<student_id>", methods=["POST"])
 def delete_student(student_id: str):
-    '''Handle student deletion.'''
+    '''Delete a student and return to the home page.'''
     try:
         tracker.delete_student(student_id)
         flash(f"Deleted {student_id}.", "success")
@@ -97,7 +112,7 @@ def delete_student(student_id: str):
 
 @app.route("/export")
 def export_report():
-    '''Export the CSV report and return to home page.'''
+    '''Export a CSV report then redirect back to the dashboard.'''
     path = tracker.export_csv()
     flash(f"CSV report exported to {path}", "success")
     return redirect(url_for("index"))
@@ -105,7 +120,7 @@ def export_report():
 
 @app.route("/seed-demo", methods=["POST"])
 def seed_demo():
-    '''Insert sample data into an empty file.'''
+    '''Insert the demo dataset into an empty storage file.'''
     try:
         tracker.seed_demo_data()
         flash("Demo data inserted.", "success")
@@ -115,4 +130,6 @@ def seed_demo():
 
 
 if __name__ == "__main__":
+    # app.run() starts the Flask development server.
+    # Reference: https://flask.palletsprojects.com/en/stable/quickstart/
     app.run(debug=True)
