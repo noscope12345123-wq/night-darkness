@@ -1,413 +1,294 @@
 from __future__ import annotations
 
-'''
-Tkinter desktop version of Student Progress Tracker Pro.
+"""Tkinter desktop dashboard for Student Progress Tracker Pro Ultra.
 
-References used in this file:
-- Tkinter docs: https://docs.python.org/3/library/tkinter.html
-- ttk docs: https://docs.python.org/3/library/tkinter.ttk.html
-- messagebox docs: https://docs.python.org/3/library/tkinter.messagebox.html
-- StringVar docs through Tkinter reference: https://docs.python.org/3/library/tkinter.html
-- Canvas drawing reference: https://docs.python.org/3/library/tkinter.html
+References:
+- tkinter: https://docs.python.org/3/library/tkinter.html
+- ttk widgets: https://docs.python.org/3/library/tkinter.ttk.html
+- messagebox: https://docs.python.org/3/library/tkinter.messagebox.html
+- canvas drawing: https://tkdocs.com/tutorial/canvas.html
+"""
 
-Notes for marking:
-- Tkinter is used for the GUI and the required data visualisation.
-- Widgets and layout use official Tkinter/ttk APIs.
-- Tracker-specific layout and chart design are original project work.
-'''
-
-# Tkinter is the standard Python GUI toolkit.
-# Reference: https://docs.python.org/3/library/tkinter.html
 import tkinter as tk
-
-# ttk and messagebox are imported from Tkinter modules.
-# References:
-# - ttk: https://docs.python.org/3/library/tkinter.ttk.html
-# - messagebox: https://docs.python.org/3/library/tkinter.messagebox.html
 from tkinter import messagebox, ttk
 
-from core import APP_NAME, StudentTracker, TrackerError, ValidationError
+from corepkg import APP_NAME, StudentTracker, TrackerError, ValidationError
 
 
-class TrackerGUI:
-    '''Desktop interface built with Tkinter and ttk widgets.''' 
+class TrackerApp:
+    """Desktop UI with dark theme, metrics, forms, and chart visualisation."""
 
-    def __init__(self, root: tk.Tk) -> None:
-        self.root = root
-        self.root.title(APP_NAME + " - Tkinter")
-        self.root.geometry("1360x820")
-        self.root.configure(bg="#0b1020")
-        self.root.minsize(1180, 720)
-
+    def __init__(self) -> None:
         self.tracker = StudentTracker()
+        self.root = tk.Tk()
+        self.root.title(APP_NAME + " | Tkinter Edition")
+        self.root.geometry("1420x900")
+        self.root.configure(bg="#08111f")
+        self.setup_styles()
+        self.build_layout()
+        self.refresh_all()
 
-        self._setup_style()
-        self._build_header()
-        self._build_metrics()
-        self._build_form()
-        self._build_table()
-        self._build_chart()
-        self._refresh_everything()
+    def setup_styles(self) -> None:
+        self.style = ttk.Style()
+        try:
+            self.style.theme_use("clam")
+        except tk.TclError:
+            pass
+        self.style.configure("Card.TFrame", background="#0f1b30")
+        self.style.configure("Panel.TLabelframe", background="#0f1b30", foreground="white")
+        self.style.configure(
+            "Panel.TLabelframe.Label",
+            background="#0f1b30",
+            foreground="#d9e7ff",
+            font=("Segoe UI", 11, "bold"),
+        )
+        self.style.configure("Dark.TLabel", background="#0f1b30", foreground="#dce6ff", font=("Segoe UI", 10))
+        self.style.configure("Metric.TLabel", background="#0f1b30", foreground="white", font=("Segoe UI", 18, "bold"))
+        self.style.configure("Subtle.TLabel", background="#0f1b30", foreground="#93a7d1", font=("Segoe UI", 10))
+        self.style.configure("Dark.TButton", font=("Segoe UI", 10, "bold"))
+        self.style.configure("Treeview", background="#12213b", fieldbackground="#12213b", foreground="white", rowheight=28)
+        self.style.map("Treeview", background=[("selected", "#3b82f6")])
+        self.style.configure("Treeview.Heading", background="#162742", foreground="white", font=("Segoe UI", 10, "bold"))
 
-    def _setup_style(self) -> None:
-        '''Configure custom ttk styling for the dark theme.'''
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Dark.TFrame", background="#0b1020")
-        style.configure("Card.TFrame", background="#131a2f")
-        style.configure("Dark.TLabel", background="#0b1020", foreground="#e5ecff", font=("Segoe UI", 11))
-        style.configure("Title.TLabel", background="#0b1020", foreground="#76a9ff", font=("Segoe UI", 24, "bold"))
-        style.configure("SubTitle.TLabel", background="#0b1020", foreground="#9fb6ef", font=("Segoe UI", 10))
-        style.configure("CardTitle.TLabel", background="#131a2f", foreground="#76a9ff", font=("Segoe UI", 13, "bold"))
-        style.configure("MetricValue.TLabel", background="#131a2f", foreground="#ffffff", font=("Segoe UI", 18, "bold"))
-        style.configure("MetricLabel.TLabel", background="#131a2f", foreground="#98a8d1", font=("Segoe UI", 10))
-        style.configure("Accent.TButton", background="#2b5cff", foreground="#ffffff", font=("Segoe UI", 10, "bold"), padding=8)
-        style.configure("Dark.Treeview", background="#131a2f", fieldbackground="#131a2f", foreground="#f5f7ff", rowheight=30)
-        style.configure("Dark.Treeview.Heading", background="#243359", foreground="#ffffff", font=("Segoe UI", 10, "bold"))
-        style.map("Dark.Treeview", background=[("selected", "#2b5cff")])
-
-    def _build_header(self) -> None:
-        '''Build the title area shown at the top of the window.'''
-        header = ttk.Frame(self.root, style="Dark.TFrame")
-        header.pack(fill="x", padx=18, pady=(16, 8))
-        ttk.Label(header, text=APP_NAME + " Dashboard", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(
-            header,
-            text="Three-interface coursework app with file handling, search, bubble sort, analytics, and Tkinter data visualisation.",
-            style="SubTitle.TLabel",
+    def build_layout(self) -> None:
+        top = ttk.Frame(self.root, style="Card.TFrame", padding=16)
+        top.pack(fill="x", padx=16, pady=(16, 8))
+        tk.Label(top, text=APP_NAME, bg="#0f1b30", fg="white", font=("Segoe UI", 24, "bold")).pack(anchor="w")
+        tk.Label(
+            top,
+            text="Ultra dashboard with analytics, search, bubble sort, and Tkinter data visualisation.",
+            bg="#0f1b30",
+            fg="#8ea1cf",
+            font=("Segoe UI", 11),
         ).pack(anchor="w", pady=(4, 0))
 
-    def _build_metrics(self) -> None:
-        '''Build dashboard metric cards above the form.'''
-        self.metrics_frame = ttk.Frame(self.root, style="Dark.TFrame")
-        self.metrics_frame.pack(fill="x", padx=18, pady=(0, 8))
-        self.metric_labels: dict[str, ttk.Label] = {}
-
-        metric_names = [
-            ("total_students", "Total Students"),
-            ("average_grade", "Average Grade"),
-            ("average_attendance", "Average Attendance"),
-            ("at_risk_count", "At Risk"),
+        metrics_holder = ttk.Frame(self.root, style="Card.TFrame", padding=8)
+        metrics_holder.pack(fill="x", padx=16)
+        self.metric_frames = {}
+        for key, title in [
+            ("total_students", "Students"),
+            ("overall_average", "Overall Avg"),
             ("pass_rate", "Pass Rate"),
-        ]
+            ("at_risk_count", "At Risk"),
+            ("strongest_module", "Strongest Module"),
+        ]:
+            frame = ttk.Frame(metrics_holder, style="Card.TFrame", padding=12)
+            frame.pack(side="left", fill="both", expand=True, padx=8, pady=8)
+            ttk.Label(frame, text=title, style="Subtle.TLabel").pack(anchor="w")
+            value = ttk.Label(frame, text="—", style="Metric.TLabel")
+            value.pack(anchor="w", pady=(6, 0))
+            self.metric_frames[key] = value
 
-        for index, (key, title) in enumerate(metric_names):
-            card = ttk.Frame(self.metrics_frame, style="Card.TFrame")
-            card.grid(row=0, column=index, sticky="nsew", padx=6)
-            self.metrics_frame.columnconfigure(index, weight=1)
-            ttk.Label(card, text=title, style="MetricLabel.TLabel").pack(anchor="w", padx=14, pady=(12, 2))
-            value_label = ttk.Label(card, text="-", style="MetricValue.TLabel")
-            value_label.pack(anchor="w", padx=14, pady=(0, 12))
-            self.metric_labels[key] = value_label
+        middle = ttk.Frame(self.root, style="Card.TFrame", padding=8)
+        middle.pack(fill="both", expand=True, padx=16, pady=8)
 
-    def _build_form(self) -> None:
-        '''Build the entry form and action buttons.'''
-        outer = ttk.Frame(self.root, style="Dark.TFrame")
-        outer.pack(fill="x", padx=18, pady=8)
+        left = ttk.Frame(middle, style="Card.TFrame")
+        left.pack(side="left", fill="both", expand=True, padx=(0, 8))
+        right = ttk.Frame(middle, style="Card.TFrame")
+        right.pack(side="left", fill="y")
 
-        form = ttk.Frame(outer, style="Card.TFrame")
-        form.pack(fill="x")
-        form.columnconfigure(1, weight=1)
-        form.columnconfigure(3, weight=1)
+        table_card = ttk.LabelFrame(left, text="Students", style="Panel.TLabelframe", padding=10)
+        table_card.pack(fill="both", expand=True)
+        search_bar = ttk.Frame(table_card, style="Card.TFrame")
+        search_bar.pack(fill="x", pady=(0, 8))
+        self.search_var = tk.StringVar()
+        self.sort_var = tk.StringVar(value="name")
+        tk.Entry(search_bar, textvariable=self.search_var, bg="#12213b", fg="white", insertbackground="white", relief="flat").pack(side="left", fill="x", expand=True, padx=(0, 8), ipady=6)
+        ttk.Button(search_bar, text="Search", command=self.search_students, style="Dark.TButton").pack(side="left", padx=4)
+        ttk.Button(search_bar, text="Refresh", command=self.refresh_all, style="Dark.TButton").pack(side="left", padx=4)
+        ttk.Combobox(search_bar, textvariable=self.sort_var, values=["name", "id", "average", "attendance", "risk"], state="readonly", width=12).pack(side="right")
 
+        columns = ("id", "name", "course", "attendance", "average", "risk", "status")
+        self.tree = ttk.Treeview(table_card, columns=columns, show="headings")
+        headings = {
+            "id": "ID",
+            "name": "Name",
+            "course": "Course",
+            "attendance": "Attendance",
+            "average": "Average",
+            "risk": "Risk",
+            "status": "Status",
+        }
+        for col in columns:
+            self.tree.heading(col, text=headings[col])
+            self.tree.column(col, width=120 if col != "name" else 180, anchor="center")
+        self.tree.pack(fill="both", expand=True)
+        self.tree.bind("<<TreeviewSelect>>", self.on_student_selected)
+
+        chart_card = ttk.LabelFrame(left, text="Data Visualisation", style="Panel.TLabelframe", padding=10)
+        chart_card.pack(fill="x", pady=(8, 0))
+        self.chart_canvas = tk.Canvas(chart_card, height=260, bg="#091426", highlightthickness=0)
+        self.chart_canvas.pack(fill="x")
+
+        detail_card = ttk.LabelFrame(right, text="Student Analytics", style="Panel.TLabelframe", padding=10)
+        detail_card.pack(fill="x", padx=8, pady=(0, 8))
+        self.detail_text = tk.Text(detail_card, width=48, height=18, bg="#0a1528", fg="white", insertbackground="white", relief="flat", wrap="word")
+        self.detail_text.pack(fill="both", expand=True)
+
+        form_card = ttk.LabelFrame(right, text="Add Student", style="Panel.TLabelframe", padding=10)
+        form_card.pack(fill="x", padx=8)
         self.student_id_var = tk.StringVar()
         self.name_var = tk.StringVar()
         self.email_var = tk.StringVar()
         self.course_var = tk.StringVar(value="IY499")
         self.attendance_var = tk.StringVar(value="100")
         self.notes_var = tk.StringVar()
-        self.module_var = tk.StringVar()
-        self.lecturer_var = tk.StringVar()
-        self.assessment_var = tk.StringVar()
-        self.score_var = tk.StringVar()
-        self.weight_var = tk.StringVar()
-        self.feedback_var = tk.StringVar()
-        self.search_var = tk.StringVar()
-
-        padx = 10
-        pady = 8
-        labels = [
-            ("Student ID", self.student_id_var, 0, 0),
-            ("Name", self.name_var, 0, 2),
-            ("Email", self.email_var, 1, 0),
-            ("Course", self.course_var, 1, 2),
-            ("Attendance", self.attendance_var, 2, 0),
-            ("Notes", self.notes_var, 2, 2),
-            ("Module", self.module_var, 3, 0),
-            ("Lecturer", self.lecturer_var, 3, 2),
-            ("Assessment", self.assessment_var, 4, 0),
-            ("Score", self.score_var, 4, 2),
-            ("Weight", self.weight_var, 5, 0),
-            ("Feedback", self.feedback_var, 5, 2),
-        ]
-
-        for text, variable, row, col in labels:
-            ttk.Label(form, text=text, style="Dark.TLabel").grid(row=row, column=col, sticky="w", padx=padx, pady=(pady, 0))
-            ttk.Entry(form, textvariable=variable).grid(row=row, column=col + 1, sticky="ew", padx=padx, pady=(0, pady))
-
-        button_row = ttk.Frame(form, style="Card.TFrame")
-        button_row.grid(row=6, column=0, columnspan=4, sticky="ew", padx=10, pady=8)
-
-        ttk.Button(button_row, text="Add Student", style="Accent.TButton", command=self.add_student).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Update Student", style="Accent.TButton", command=self.update_student).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Add Module", style="Accent.TButton", command=self.add_module).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Add Assessment", style="Accent.TButton", command=self.add_assessment).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Export CSV", style="Accent.TButton", command=self.export_csv).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Seed Demo", style="Accent.TButton", command=self.seed_demo).pack(side="left", padx=4)
-        ttk.Button(button_row, text="Clear Form", style="Accent.TButton", command=self.clear_form).pack(side="left", padx=4)
-
-        search_row = ttk.Frame(form, style="Card.TFrame")
-        search_row.grid(row=7, column=0, columnspan=4, sticky="ew", padx=10, pady=(0, 12))
-        ttk.Label(search_row, text="Search", style="Dark.TLabel").pack(side="left", padx=(0, 8))
-        ttk.Entry(search_row, textvariable=self.search_var, width=30).pack(side="left")
-        ttk.Button(search_row, text="Run Search", style="Accent.TButton", command=self.run_search).pack(side="left", padx=6)
-        ttk.Button(search_row, text="Sort by Name", style="Accent.TButton", command=lambda: self.refresh_table("name")).pack(side="left", padx=4)
-        ttk.Button(search_row, text="Sort by ID", style="Accent.TButton", command=lambda: self.refresh_table("id")).pack(side="left", padx=4)
-        ttk.Button(search_row, text="Sort by Attendance", style="Accent.TButton", command=lambda: self.refresh_table("attendance")).pack(side="left", padx=4)
-        ttk.Button(search_row, text="Sort by Average", style="Accent.TButton", command=lambda: self.refresh_table("average")).pack(side="left", padx=4)
-
-    def _build_table(self) -> None:
-        '''Build the Treeview table used to show student records.'''
-        wrapper = ttk.Frame(self.root, style="Dark.TFrame")
-        wrapper.pack(fill="both", expand=True, padx=18, pady=8)
-
-        left = ttk.Frame(wrapper, style="Card.TFrame")
-        left.pack(side="left", fill="both", expand=True)
-
-        ttk.Label(left, text="Student Records", style="CardTitle.TLabel").pack(anchor="w", padx=12, pady=(10, 6))
-
-        columns = ("id", "name", "course", "attendance", "average", "status")
-        self.tree = ttk.Treeview(left, columns=columns, show="headings", style="Dark.Treeview")
-        self.tree.heading("id", text="ID")
-        self.tree.heading("name", text="Name")
-        self.tree.heading("course", text="Course")
-        self.tree.heading("attendance", text="Attendance")
-        self.tree.heading("average", text="Average")
-        self.tree.heading("status", text="Status")
-        self.tree.column("id", width=110)
-        self.tree.column("name", width=170)
-        self.tree.column("course", width=110)
-        self.tree.column("attendance", width=110)
-        self.tree.column("average", width=110)
-        self.tree.column("status", width=160)
-        self.tree.pack(fill="both", expand=True, padx=12, pady=12)
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-    def _build_chart(self) -> None:
-        '''Build the chart area used for Tkinter data visualisation.'''
-        right = ttk.Frame(self.root, style="Card.TFrame")
-        right.pack(fill="x", padx=18, pady=(0, 18))
-
-        ttk.Label(right, text="Average Score Visualisation", style="CardTitle.TLabel").pack(anchor="w", padx=12, pady=(10, 6))
-        self.chart_canvas = tk.Canvas(right, height=280, bg="#11182c", highlightthickness=0)
-        self.chart_canvas.pack(fill="x", padx=12, pady=(0, 12))
-
-    def _refresh_everything(self) -> None:
-        '''Refresh table, metrics, and chart together.'''
-        self.refresh_metrics()
-        self.refresh_table("name")
-        self.draw_chart()
+        for label, var in [
+            ("Student ID", self.student_id_var),
+            ("Name", self.name_var),
+            ("Email", self.email_var),
+            ("Course", self.course_var),
+            ("Attendance", self.attendance_var),
+            ("Notes", self.notes_var),
+        ]:
+            ttk.Label(form_card, text=label, style="Dark.TLabel").pack(anchor="w", pady=(6, 0))
+            tk.Entry(form_card, textvariable=var, bg="#12213b", fg="white", insertbackground="white", relief="flat").pack(fill="x", ipady=6)
+        button_row = ttk.Frame(form_card, style="Card.TFrame")
+        button_row.pack(fill="x", pady=(10, 0))
+        ttk.Button(button_row, text="Add Student", command=self.add_student, style="Dark.TButton").pack(side="left", padx=(0, 6))
+        ttk.Button(button_row, text="Seed Demo", command=self.seed_demo, style="Dark.TButton").pack(side="left", padx=6)
+        ttk.Button(button_row, text="Export CSV", command=self.export_csv, style="Dark.TButton").pack(side="left", padx=6)
+        ttk.Button(button_row, text="Clear Form", command=self.clear_form, style="Dark.TButton").pack(side="left", padx=6)
 
     def refresh_metrics(self) -> None:
-        '''Update the dashboard metric cards from tracker analytics.'''
         stats = self.tracker.dashboard_metrics()
-        self.metric_labels["total_students"].config(text=str(stats["total_students"]))
-        self.metric_labels["average_grade"].config(text="-" if stats["average_grade"] is None else f"{stats['average_grade']:.2f}%")
-        self.metric_labels["average_attendance"].config(text="-" if stats["average_attendance"] is None else f"{stats['average_attendance']:.2f}%")
-        self.metric_labels["at_risk_count"].config(text=str(stats["at_risk_count"]))
-        self.metric_labels["pass_rate"].config(text=f"{stats['pass_rate']:.2f}%")
+        self.metric_frames["total_students"].config(text=str(stats["total_students"]))
+        self.metric_frames["overall_average"].config(text="N/A" if stats["overall_average"] is None else f"{stats['overall_average']}%")
+        self.metric_frames["pass_rate"].config(text=f"{stats['pass_rate']}%")
+        self.metric_frames["at_risk_count"].config(text=str(stats["at_risk_count"]))
+        self.metric_frames["strongest_module"].config(text=str(stats["strongest_module"]))
 
-    def refresh_table(self, sort_by: str = "name", students=None) -> None:
-        '''Fill the table with sorted or searched records.'''
+    def refresh_tree(self, students=None) -> None:
         for item in self.tree.get_children():
             self.tree.delete(item)
-
-        items = self.tracker.sort_students(sort_by) if students is None else students
-        for student in items:
+        students = self.tracker.sort_students(self.sort_var.get()) if students is None else students
+        for student in students:
             average = self.tracker.calculate_student_average(student)
-            average_text = "-" if average is None else f"{average:.2f}"
-            self.tree.insert("", "end", iid=student.student_id, values=(
-                student.student_id,
-                student.name,
-                student.course,
-                f"{student.attendance:.1f}%",
-                average_text,
-                self.tracker.get_progress_status(student),
-            ))
-        self.draw_chart(items)
+            self.tree.insert(
+                "",
+                "end",
+                values=(
+                    student.student_id,
+                    student.name,
+                    student.course,
+                    f"{student.attendance:.1f}%",
+                    "N/A" if average is None else f"{average:.2f}%",
+                    self.tracker.calculate_risk_score(student),
+                    self.tracker.get_progress_status(student),
+                ),
+            )
+        self.draw_chart(students)
         self.refresh_metrics()
 
     def draw_chart(self, students=None) -> None:
-        '''Draw a bar chart using Tkinter Canvas rectangles and text.'''
         self.chart_canvas.delete("all")
         students = self.tracker.sort_students("average") if students is None else students
         students = students[:8]
-
-        width = max(self.chart_canvas.winfo_width(), 980)
-        height = 280
-        self.chart_canvas.config(scrollregion=(0, 0, width, height))
-        self.chart_canvas.create_text(20, 20, anchor="w", fill="#dce6ff", font=("Segoe UI", 12, "bold"), text="Top 8 student averages")
-
+        width = max(self.chart_canvas.winfo_width(), 900)
+        self.chart_canvas.config(scrollregion=(0, 0, width, 240))
+        self.chart_canvas.create_text(20, 18, anchor="w", fill="#dce6ff", font=("Segoe UI", 12, "bold"), text="Top student averages")
         if not students:
-            self.chart_canvas.create_text(20, 70, anchor="w", fill="#ffffff", font=("Segoe UI", 12), text="No data available yet.")
+            self.chart_canvas.create_text(20, 70, anchor="w", fill="white", text="No data yet.")
             return
-
-        # Horizontal guide lines help make the chart easier to read.
         for value in (0, 25, 50, 75, 100):
-            y = 225 - (150 * (value / 100))
-            self.chart_canvas.create_line(50, y, width - 30, y, fill="#23314f")
-            self.chart_canvas.create_text(26, y, fill="#8ea1cf", text=str(value))
+            y = 205 - (140 * (value / 100))
+            self.chart_canvas.create_line(50, y, width - 30, y, fill="#1d3358")
+            self.chart_canvas.create_text(28, y, fill="#8ea1cf", text=str(value))
+        bar_width = 80
+        gap = 28
+        x = 70
+        colours = {
+            "Excellent": "#10b981",
+            "Stable": "#3b82f6",
+            "Needs support": "#f59e0b",
+            "Critical risk": "#ef4444",
+            "Insufficient data": "#64748b",
+        }
+        for student in students:
+            average = self.tracker.calculate_student_average(student) or 0
+            status = self.tracker.get_progress_status(student)
+            bar_height = 140 * (average / 100)
+            y1 = 205 - bar_height
+            self.chart_canvas.create_rectangle(x, y1, x + bar_width, 205, fill=colours.get(status, "#3b82f6"), outline="")
+            self.chart_canvas.create_text(x + bar_width / 2, y1 - 10, fill="white", text=f"{average:.1f}%")
+            self.chart_canvas.create_text(x + bar_width / 2, 220, fill="#dce6ff", text=student.name[:10])
+            x += bar_width + gap
 
-        bar_width = 85
-        gap = 25
-        start_x = 70
-        base_y = 225
-        max_height = 150
+    def refresh_all(self) -> None:
+        self.refresh_tree()
+        self.detail_text.delete("1.0", "end")
+        self.detail_text.insert("end", "Select a student to view advanced analytics.\n")
 
-        for index, student in enumerate(students):
-            average = self.tracker.calculate_student_average(student)
-            if average is None:
-                average = 0
-            bar_height = max_height * (average / 100)
-            x1 = start_x + index * (bar_width + gap)
-            y1 = base_y - bar_height
-            x2 = x1 + bar_width
-            y2 = base_y
-
-            colour = "#3e6cff"
-            if average < 40:
-                colour = "#cf3d5e"
-            elif average < 60:
-                colour = "#c28d2c"
-            elif average >= 70:
-                colour = "#24a36b"
-
-            self.chart_canvas.create_rectangle(x1, y1, x2, y2, fill=colour, outline="#7fa4ff")
-            self.chart_canvas.create_text((x1 + x2) / 2, y1 - 12, fill="#ffffff", text=f"{average:.1f}")
-            self.chart_canvas.create_text((x1 + x2) / 2, base_y + 16, fill="#dce6ff", text=student.name[:10])
-
-        self.chart_canvas.create_line(45, base_y, width - 30, base_y, fill="#ffffff")
-
-    def run_search(self) -> None:
-        '''Search students and update the table/chart.'''
+    def search_students(self) -> None:
         keyword = self.search_var.get().strip()
-        if not keyword:
-            self.refresh_table("name")
-            return
         results = self.tracker.search_students(keyword)
-        self.refresh_table(students=results)
+        self.refresh_tree(results)
 
-    def on_select(self, _event=None) -> None:
-        '''Load the selected record into the form fields for editing.'''
+    def on_student_selected(self, event=None) -> None:
         selected = self.tree.selection()
         if not selected:
             return
-        student = self.tracker.get_student(selected[0])
-        self.student_id_var.set(student.student_id)
-        self.name_var.set(student.name)
-        self.email_var.set(student.email)
-        self.course_var.set(student.course)
-        self.attendance_var.set(str(student.attendance))
-        self.notes_var.set(student.notes)
-
-    def clear_form(self) -> None:
-        '''Reset the form fields to empty/default values.'''
-        self.student_id_var.set("")
-        self.name_var.set("")
-        self.email_var.set("")
-        self.course_var.set("IY499")
-        self.attendance_var.set("100")
-        self.notes_var.set("")
-        self.module_var.set("")
-        self.lecturer_var.set("")
-        self.assessment_var.set("")
-        self.score_var.set("")
-        self.weight_var.set("")
-        self.feedback_var.set("")
-        self.search_var.set("")
-
-    def alert(self, title: str, message: str, is_error: bool = False) -> None:
-        '''Show either an information or error message box.'''
-        if is_error:
-            messagebox.showerror(title, message)
-        else:
-            messagebox.showinfo(title, message)
+        values = self.tree.item(selected[0], "values")
+        student = self.tracker.get_student(values[0])
+        info = self.tracker.summary_for_student(student)
+        self.detail_text.delete("1.0", "end")
+        self.detail_text.insert("end", f"ID: {student.student_id}\n")
+        self.detail_text.insert("end", f"Name: {student.name}\n")
+        self.detail_text.insert("end", f"Email: {student.email}\n")
+        self.detail_text.insert("end", f"Course: {student.course}\n")
+        self.detail_text.insert("end", f"Attendance: {student.attendance}%\n")
+        self.detail_text.insert("end", f"Average: {info['average']}\n")
+        self.detail_text.insert("end", f"Grade band: {info['grade_band']}\n")
+        self.detail_text.insert("end", f"Status: {info['status']}\n")
+        self.detail_text.insert("end", f"Trend: {info['trend']}\n")
+        self.detail_text.insert("end", f"Risk score: {info['risk']}\n\n")
+        self.detail_text.insert("end", f"Recommendation:\n{info['recommendation']}\n\n")
+        self.detail_text.insert("end", "Modules:\n")
+        for module in student.modules.values():
+            module_avg = self.tracker.calculate_module_average(module)
+            self.detail_text.insert("end", f"- {module.module_name} ({module.lecturer}) | Avg: {module_avg}\n")
+            for assessment in module.assessments:
+                self.detail_text.insert("end", f"    • {assessment.name}: {assessment.score}% weighted {assessment.weight}%\n")
 
     def add_student(self) -> None:
-        '''Button callback for adding a student.'''
         try:
             self.tracker.add_student(
                 self.student_id_var.get(),
                 self.name_var.get(),
                 self.email_var.get(),
                 self.course_var.get(),
-                float(self.attendance_var.get() or 100),
+                float(self.attendance_var.get() or "100"),
                 self.notes_var.get(),
             )
-            self._refresh_everything()
-            self.alert("Success", "Student added successfully.")
+            messagebox.showinfo("Success", "Student added successfully.")
+            self.clear_form()
+            self.refresh_all()
         except (ValidationError, TrackerError, ValueError) as exc:
-            self.alert("Error", str(exc), True)
+            messagebox.showerror("Error", str(exc))
 
-    def update_student(self) -> None:
-        '''Button callback for updating a student.'''
-        try:
-            self.tracker.update_student(
-                self.student_id_var.get(),
-                self.name_var.get(),
-                self.email_var.get(),
-                self.course_var.get(),
-                float(self.attendance_var.get() or 100),
-                self.notes_var.get(),
-            )
-            self._refresh_everything()
-            self.alert("Success", "Student updated successfully.")
-        except (ValidationError, TrackerError, ValueError) as exc:
-            self.alert("Error", str(exc), True)
-
-    def add_module(self) -> None:
-        '''Button callback for adding a module.'''
-        try:
-            self.tracker.add_module(self.student_id_var.get(), self.module_var.get(), self.lecturer_var.get())
-            self._refresh_everything()
-            self.alert("Success", "Module added successfully.")
-        except (ValidationError, TrackerError) as exc:
-            self.alert("Error", str(exc), True)
-
-    def add_assessment(self) -> None:
-        '''Button callback for adding an assessment.'''
-        try:
-            self.tracker.add_assessment(
-                self.student_id_var.get(),
-                self.module_var.get(),
-                self.assessment_var.get(),
-                float(self.score_var.get()),
-                float(self.weight_var.get()),
-                self.feedback_var.get(),
-            )
-            self._refresh_everything()
-            self.alert("Success", "Assessment added successfully.")
-        except (ValidationError, TrackerError, ValueError) as exc:
-            self.alert("Error", str(exc), True)
-
-    def export_csv(self) -> None:
-        '''Button callback for exporting the report as CSV.'''
-        path = self.tracker.export_csv()
-        self.alert("Export Complete", f"CSV report saved to: {path}")
+    def clear_form(self) -> None:
+        self.student_id_var.set("")
+        self.name_var.set("")
+        self.email_var.set("")
+        self.course_var.set("IY499")
+        self.attendance_var.set("100")
+        self.notes_var.set("")
 
     def seed_demo(self) -> None:
-        '''Button callback for inserting demo data.'''
         try:
             self.tracker.seed_demo_data()
-            self._refresh_everything()
-            self.alert("Success", "Demo data inserted.")
+            messagebox.showinfo("Success", "Demo data inserted.")
+            self.refresh_all()
         except TrackerError as exc:
-            self.alert("Error", str(exc), True)
+            messagebox.showwarning("Notice", str(exc))
+
+    def export_csv(self) -> None:
+        path = self.tracker.export_csv()
+        messagebox.showinfo("Export", f"CSV exported to {path}")
+
+    def run(self) -> None:
+        self.root.mainloop()
 
 
 if __name__ == "__main__":
-    # Tk() creates the main application window.
-    # Reference: https://docs.python.org/3/library/tkinter.html
-    root = tk.Tk()
-    app = TrackerGUI(root)
-    root.mainloop()
+    TrackerApp().run()

@@ -1,35 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ app_name }}</title>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #09101f 0%, #0c1630 100%); color: #edf2ff; margin: 0; }
-        .container { width: 92%; margin: 24px auto; }
-        .card { background: #121b33; border-radius: 18px; padding: 20px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.22); }
-        h1,h2,h3 { color: #7aa3ff; margin-top: 0; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #2d3f6b; background: #0d1528; color: #fff; box-sizing: border-box; }
-        button, .btn { background: #3763ff; color: white; border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+        :root {
+            --bg: #08111f;
+            --card: #0f1b30;
+            --card-2: #12213b;
+            --text: #f8fbff;
+            --muted: #94a7cf;
+            --border: #22395f;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Inter, Segoe UI, Arial, sans-serif;
+            background: radial-gradient(circle at top, #10203b 0%, var(--bg) 50%, #060c17 100%);
+            color: var(--text);
+        }
+        .container { max-width: 1380px; margin: 0 auto; padding: 24px; }
+        .hero, .card { background: rgba(15,27,48,.92); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+        .hero { padding: 24px; margin-bottom: 18px; }
+        .hero h1 { margin: 0; font-size: 2rem; }
+        .muted { color: var(--muted); }
+        .grid { display: grid; gap: 18px; }
+        .metrics { grid-template-columns: repeat(5, 1fr); margin-bottom: 18px; }
+        .metric { padding: 18px; }
+        .metric .label { color: var(--muted); font-size: .9rem; }
+        .metric .value { font-size: 1.8rem; font-weight: 700; margin-top: 8px; }
+        .split { grid-template-columns: 2fr 1fr; }
+        .card { padding: 18px; }
+        .toolbar, .form-grid { display: grid; gap: 10px; }
+        .toolbar { grid-template-columns: 1fr 180px auto auto; margin-bottom: 14px; }
+        .form-grid { grid-template-columns: 1fr 1fr; }
+        input, textarea, select, button {
+            width: 100%; border-radius: 14px; border: 1px solid var(--border); background: var(--card-2); color: white; padding: 12px 14px;
+        }
+        textarea { min-height: 110px; resize: vertical; }
+        button, .btn { cursor: pointer; background: linear-gradient(135deg, var(--blue), #2563eb); text-decoration: none; display: inline-block; text-align: center; }
+        .btn-secondary { background: #1d3557; }
+        .btn-danger { background: linear-gradient(135deg, #dc2626, #991b1b); }
         table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #263554; }
-        th { color: #9eb8ff; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-        .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-        .metric { background: #0d1528; border-radius: 14px; padding: 16px; }
-        .metric strong { color: #9eb8ff; }
-        .flash-success { background: #113b28; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
-        .flash-danger { background: #501a1a; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
-        .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #18264b; color: #cfe0ff; font-size: 12px; margin-right: 6px; }
-        a { color: #9eb8ff; }
+        th, td { padding: 12px; border-bottom: 1px solid #1f3254; text-align: left; }
+        th { color: var(--muted); font-size: .9rem; }
+        .status { padding: 6px 10px; border-radius: 999px; font-size: .8rem; display: inline-block; }
+        .Excellent { background: rgba(16,185,129,.18); color: #6ee7b7; }
+        .Stable { background: rgba(59,130,246,.18); color: #93c5fd; }
+        .Needs-support { background: rgba(245,158,11,.18); color: #fcd34d; }
+        .Critical-risk { background: rgba(239,68,68,.18); color: #fca5a5; }
+        .Insufficient-data { background: rgba(100,116,139,.18); color: #cbd5e1; }
+        .flash { padding: 12px 14px; border-radius: 14px; margin-bottom: 12px; }
+        .flash.success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.35); }
+        .flash.danger { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.35); }
+        .flash.warning { background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.35); }
+        .mini { font-size: .85rem; }
+        .chart-row { display: flex; align-items: end; gap: 10px; min-height: 220px; margin-top: 10px; }
+        .bar { width: 64px; background: linear-gradient(180deg, #60a5fa, #2563eb); border-radius: 18px 18px 8px 8px; position: relative; }
+        .bar span { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: .8rem; }
+        .bar-label { text-align: center; margin-top: 8px; color: var(--muted); font-size: .8rem; }
+        @media (max-width: 1080px) {
+            .metrics, .split, .toolbar, .form-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
+    <div class="hero">
+        <h1>{{ app_name }}</h1>
+        <div class="muted">Ultra dashboard version with analytics, search, bubble sort, file handling, and progress intelligence.</div>
+    </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="flash-{{ category }}">{{ message }}</div>
+                <div class="flash {{ category }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}

@@ -1,135 +1,107 @@
 from __future__ import annotations
 
-'''
-Flask web version of Student Progress Tracker Pro.
+"""Flask web interface for Student Progress Tracker Pro Ultra.
 
-References used in this file:
+References:
 - Flask quickstart: https://flask.palletsprojects.com/en/stable/quickstart/
-- Flask tutorial: https://flask.palletsprojects.com/en/stable/tutorial/
-- Flask API patterns for request/redirect/url_for/flash/render_template:
-  https://flask.palletsprojects.com/en/stable/api/
+- Flask testing: https://flask.palletsprojects.com/en/stable/testing/
+"""
 
-Notes:
-- Flask functions and decorators are official framework features.
-- Route structure and project-specific page flow are original work.
-'''
-
-# Flask imports used for routing, forms, templates, and flash messages.
-# Reference: https://flask.palletsprojects.com/en/stable/
 from flask import Flask, flash, redirect, render_template, request, url_for
 
-from core import APP_NAME, StudentTracker, TrackerError, ValidationError
+from corepkg import APP_NAME, StudentTracker, TrackerError, ValidationError
 
 app = Flask(__name__)
-app.secret_key = "night-iy499-student-tracker-secret"
+app.secret_key = 'night-iy499-ultra-secret'
 tracker = StudentTracker()
 
 
-@app.route("/")
+@app.route('/')
 def index():
-    '''Render the dashboard page with metrics and the student table.'''
-    sort_by = request.args.get("sort", "name")
-    query = request.args.get("q", "").strip()
+    sort_by = request.args.get('sort', 'name')
+    query = request.args.get('q', '').strip()
     students = tracker.search_students(query) if query else tracker.sort_students(sort_by)
-    stats = tracker.dashboard_metrics()
-    return render_template(
-        "index.html",
-        app_name=APP_NAME,
-        tracker=tracker,
-        students=students,
-        stats=stats,
-        sort_by=sort_by,
-        query=query,
-    )
+    return render_template('index.html', app_name=APP_NAME, tracker=tracker, students=students, stats=tracker.dashboard_metrics(), sort_by=sort_by, query=query)
 
 
-@app.route("/student/<student_id>")
+@app.route('/student/<student_id>')
 def student_detail(student_id: str):
-    '''Render the detail page for one student.'''
     student = tracker.get_student(student_id)
-    return render_template("student_detail.html", app_name=APP_NAME, tracker=tracker, student=student)
+    return render_template('student_detail.html', app_name=APP_NAME, tracker=tracker, student=student, info=tracker.summary_for_student(student))
 
 
-@app.route("/add-student", methods=["POST"])
+@app.route('/add-student', methods=['POST'])
 def add_student():
-    '''Handle add-student form submission with validation and flashing.'''
     try:
         tracker.add_student(
-            request.form.get("student_id", ""),
-            request.form.get("name", ""),
-            request.form.get("email", ""),
-            request.form.get("course", ""),
-            float(request.form.get("attendance", "100") or 100),
-            request.form.get("notes", ""),
+            request.form.get('student_id', ''),
+            request.form.get('name', ''),
+            request.form.get('email', ''),
+            request.form.get('course', ''),
+            float(request.form.get('attendance', '100') or 100),
+            request.form.get('notes', ''),
         )
-        flash("Student added successfully.", "success")
+        flash('Student added successfully.', 'success')
     except (ValidationError, TrackerError, ValueError) as exc:
-        flash(str(exc), "danger")
-    return redirect(url_for("index"))
+        flash(str(exc), 'danger')
+    return redirect(url_for('index'))
 
 
-@app.route("/add-module", methods=["POST"])
+@app.route('/add-module', methods=['POST'])
 def add_module():
-    '''Handle add-module form submission.'''
-    student_id = request.form.get("student_id", "")
+    student_id = request.form.get('student_id', '')
     try:
-        tracker.add_module(student_id, request.form.get("module_name", ""), request.form.get("lecturer", ""))
-        flash("Module added successfully.", "success")
+        tracker.add_module(student_id, request.form.get('module_name', ''), request.form.get('lecturer', ''))
+        flash('Module added successfully.', 'success')
     except (ValidationError, TrackerError) as exc:
-        flash(str(exc), "danger")
-    return redirect(url_for("student_detail", student_id=student_id))
+        flash(str(exc), 'danger')
+    return redirect(url_for('student_detail', student_id=student_id))
 
 
-@app.route("/add-assessment", methods=["POST"])
+@app.route('/add-assessment', methods=['POST'])
 def add_assessment():
-    '''Handle add-assessment form submission.'''
-    student_id = request.form.get("student_id", "")
+    student_id = request.form.get('student_id', '')
     try:
         tracker.add_assessment(
             student_id,
-            request.form.get("module_name", ""),
-            request.form.get("assessment_name", ""),
-            float(request.form.get("score", "0") or 0),
-            float(request.form.get("weight", "0") or 0),
-            request.form.get("feedback", ""),
+            request.form.get('module_name', ''),
+            request.form.get('assessment_name', ''),
+            float(request.form.get('score', '0') or 0),
+            float(request.form.get('weight', '0') or 0),
+            request.form.get('feedback', ''),
         )
-        flash("Assessment added successfully.", "success")
+        flash('Assessment added successfully.', 'success')
     except (ValidationError, TrackerError, ValueError) as exc:
-        flash(str(exc), "danger")
-    return redirect(url_for("student_detail", student_id=student_id))
+        flash(str(exc), 'danger')
+    return redirect(url_for('student_detail', student_id=student_id))
 
 
-@app.route("/delete-student/<student_id>", methods=["POST"])
-def delete_student(student_id: str):
-    '''Delete a student and return to the home page.'''
-    try:
-        tracker.delete_student(student_id)
-        flash(f"Deleted {student_id}.", "success")
-    except TrackerError as exc:
-        flash(str(exc), "danger")
-    return redirect(url_for("index"))
-
-
-@app.route("/export")
+@app.route('/export')
 def export_report():
-    '''Export a CSV report then redirect back to the dashboard.'''
     path = tracker.export_csv()
-    flash(f"CSV report exported to {path}", "success")
-    return redirect(url_for("index"))
+    flash(f'CSV report exported to {path}', 'success')
+    return redirect(url_for('index'))
 
 
-@app.route("/seed-demo", methods=["POST"])
+@app.route('/seed-demo', methods=['POST'])
 def seed_demo():
-    '''Insert the demo dataset into an empty storage file.'''
     try:
         tracker.seed_demo_data()
-        flash("Demo data inserted.", "success")
+        flash('Demo data inserted.', 'success')
     except TrackerError as exc:
-        flash(str(exc), "danger")
-    return redirect(url_for("index"))
+        flash(str(exc), 'warning')
+    return redirect(url_for('index'))
 
 
-if __name__ == "__main__":
-    # app.run() starts the Flask development server.
-    # Reference: https://flask.palletsprojects.com/en/stable/quickstart/
+@app.route('/delete-student/<student_id>', methods=['POST'])
+def delete_student(student_id: str):
+    try:
+        tracker.delete_student(student_id)
+        flash(f'Deleted {student_id}.', 'success')
+    except TrackerError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('index'))
+
+
+if __name__ == '__main__':
     app.run(debug=True)

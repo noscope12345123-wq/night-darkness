@@ -1,89 +1,84 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card">
-    <h1>{{ app_name }} - Flask Dashboard</h1>
-    <p>Web version of the project with file handling, searching, bubble sorting, analytics, export, and a shared backend.</p>
-    <span class="pill">JSON storage</span>
-    <span class="pill">CSV export</span>
-    <span class="pill">Search algorithm</span>
-    <span class="pill">Bubble sort</span>
-    <span class="pill">Error handling</span>
+<div class="grid metrics">
+    <div class="metric card"><div class="label">Students</div><div class="value">{{ stats.total_students }}</div></div>
+    <div class="metric card"><div class="label">Overall Average</div><div class="value">{{ stats.overall_average if stats.overall_average is not none else 'N/A' }}</div></div>
+    <div class="metric card"><div class="label">Pass Rate</div><div class="value">{{ stats.pass_rate }}%</div></div>
+    <div class="metric card"><div class="label">At Risk</div><div class="value">{{ stats.at_risk_count }}</div></div>
+    <div class="metric card"><div class="label">Strongest Module</div><div class="value">{{ stats.strongest_module }}</div></div>
 </div>
 
-<div class="card metrics">
-    <div class="metric"><strong>Total Students</strong><br>{{ stats.total_students }}</div>
-    <div class="metric"><strong>Average Grade</strong><br>{{ stats.average_grade }}</div>
-    <div class="metric"><strong>Average Attendance</strong><br>{{ stats.average_attendance }}</div>
-    <div class="metric"><strong>At Risk</strong><br>{{ stats.at_risk_count }}</div>
-    <div class="metric"><strong>Pass Rate</strong><br>{{ stats.pass_rate }}%</div>
-</div>
-
-<div class="grid">
+<div class="grid split">
     <div class="card">
-        <h2>Add Student</h2>
-        <form method="post" action="{{ url_for('add_student') }}">
+        <form class="toolbar" method="get" action="{{ url_for('index') }}">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by name, ID, email, course, notes, status, recommendation...">
+            <select name="sort">
+                {% for option in ['name', 'id', 'average', 'attendance', 'risk'] %}
+                    <option value="{{ option }}" {% if sort_by == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Apply</button>
+            <a class="btn btn-secondary" href="{{ url_for('export_report') }}">Export CSV</a>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Name</th><th>Course</th><th>Attendance</th><th>Average</th><th>Risk</th><th>Status</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for student in students %}
+                {% set avg = tracker.calculate_student_average(student) %}
+                {% set status = tracker.get_progress_status(student) %}
+                <tr>
+                    <td>{{ student.student_id }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.course }}</td>
+                    <td>{{ '%.1f'|format(student.attendance) }}%</td>
+                    <td>{% if avg is not none %}{{ '%.2f'|format(avg) }}%{% else %}N/A{% endif %}</td>
+                    <td>{{ tracker.calculate_risk_score(student) }}</td>
+                    <td><span class="status {{ status.replace(' ', '-') }}">{{ status }}</span></td>
+                    <td>
+                        <a class="btn btn-secondary mini" href="{{ url_for('student_detail', student_id=student.student_id) }}">Open</a>
+                        <form style="display:inline" method="post" action="{{ url_for('delete_student', student_id=student.student_id) }}" onsubmit="return confirm('Delete this student?')">
+                            <button class="btn-danger mini" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="card" style="margin-top:16px;">
+            <div class="label muted">Quick visualisation</div>
+            <div class="chart-row">
+                {% for student in tracker.sort_students('average')[:8] %}
+                    {% set avg = tracker.calculate_student_average(student) or 0 %}
+                    <div>
+                        <div class="bar" style="height: {{ (avg * 1.8)|round|int }}px;"><span>{{ '%.0f'|format(avg) }}%</span></div>
+                        <div class="bar-label">{{ student.name[:8] }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0;">Add Student</h3>
+        <form method="post" action="{{ url_for('add_student') }}" class="form-grid">
             <input name="student_id" placeholder="Student ID" required>
             <input name="name" placeholder="Name" required>
             <input name="email" placeholder="Email" required>
             <input name="course" placeholder="Course" value="IY499" required>
-            <input name="attendance" placeholder="Attendance" value="100">
+            <input name="attendance" placeholder="Attendance" value="100" required>
             <textarea name="notes" placeholder="Notes"></textarea>
             <button type="submit">Add Student</button>
+            <button type="button" class="btn-secondary" onclick="window.location='{{ url_for('index') }}'">Reset</button>
         </form>
-        <form method="post" action="{{ url_for('seed_demo') }}" style="margin-top: 10px;">
+        <hr style="border-color:#1f3254; margin:18px 0;">
+        <form method="post" action="{{ url_for('seed_demo') }}">
             <button type="submit">Seed Demo Data</button>
         </form>
-        <p style="margin-top: 10px;"><a class="btn" href="{{ url_for('export_report') }}">Export CSV</a></p>
+        <p class="muted mini">Use the demo button only on an empty data file.</p>
     </div>
-    <div class="card">
-        <h2>Search / Sort</h2>
-        <form method="get" action="{{ url_for('index') }}">
-            <input name="q" placeholder="Search keyword" value="{{ query }}">
-            <select name="sort">
-                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Sort by Name</option>
-                <option value="id" {% if sort_by == 'id' %}selected{% endif %}>Sort by ID</option>
-                <option value="attendance" {% if sort_by == 'attendance' %}selected{% endif %}>Sort by Attendance</option>
-                <option value="average" {% if sort_by == 'average' %}selected{% endif %}>Sort by Average</option>
-            </select>
-            <button type="submit">Apply</button>
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Students</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Course</th>
-                <th>Attendance</th>
-                <th>Average</th>
-                <th>Status</th>
-                <th>Open</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for student in students %}
-            {% set average = tracker.calculate_student_average(student) %}
-            <tr>
-                <td>{{ student.student_id }}</td>
-                <td>{{ student.name }}</td>
-                <td>{{ student.course }}</td>
-                <td>{{ '%.1f'|format(student.attendance) }}%</td>
-                <td>{% if average is not none %}{{ '%.2f'|format(average) }}{% else %}-{% endif %}</td>
-                <td>{{ tracker.get_progress_status(student) }}</td>
-                <td><a href="{{ url_for('student_detail', student_id=student.student_id) }}">View</a></td>
-                <td>
-                    <form method="post" action="{{ url_for('delete_student', student_id=student.student_id) }}">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 {% endblock %}
