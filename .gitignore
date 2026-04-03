@@ -2,9 +2,11 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.log
-*.csv
 *.json
-.env
+*.csv
+*.log
+backups/
 .venv/
 venv/
+.env
+.DS_Store
