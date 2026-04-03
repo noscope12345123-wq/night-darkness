@@ -1,0 +1,30 @@
+# Create a new empty repository on GitHub first, then run these commands in the project folder.
+
+git init
+git add README.md README.txt requirements.txt .gitignore
+git commit -m "Add documentation and dependency setup"
+
+git add corepkg/models.py corepkg/errors.py
+git commit -m "Add data models and custom exceptions"
+
+git add corepkg/storage.py
+git commit -m "Implement JSON storage, CSV export, logging, and backups"
+
+git add corepkg/analytics.py corepkg/services.py
+git commit -m "Add analytics, validation, search, bubble sort, and tracker services"
+
+git add console_app.py
+git commit -m "Create console interface"
+
+git add tkinter_app.py
+git commit -m "Create Tkinter desktop dashboard with data visualisation"
+
+git add flask_app.py templates/
+git commit -m "Add Flask web dashboard and detail pages"
+
+git add tests.py
+git commit -m "Add test scenarios and smoke tests"
+
+git branch -M main
+git remote add origin YOUR_GITHUB_REPO_URL
+git push -u origin main
